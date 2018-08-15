@@ -33,14 +33,6 @@ function map_data_for_pcp(in_data, series_name) {
     return out_data;
 }
 
-var inputs;
-var outputsO2;
-var outputsT;
-var outputsHF;
-var simO2;
-var simT;
-var simHF;
-
 var pcp_inputs;
 var pcp_O2;
 var pcp_temperature;
@@ -65,12 +57,12 @@ function format_dimensions(data) {
     // var dummy = d3.parcoords();
     // var range = dummy.height() - dummy.margin().top - dummy.margin().bottom;
     // console.log(range);
-    var yScale = d3.scale.linear()
-        .domain([min_value, max_value]).range([115, 1]);
 
     var dimensions = {};
     var dim_count = 0;
     for (var j in data[0]) {
+        var yScale = d3.scale.linear()
+        .domain([min_value, max_value]).range([115, 1]);
         dimensions[j] = {
             // ticks: 3,
             tickValues: [min_value, (min_value + max_value) / 2., max_value],
@@ -136,14 +128,7 @@ function create_parcoord(title, data, dimensions, colormap) {
         .on("render", update_selection);
 }
 
-function make_graphs(error, input_data, sim_data_O2, sim_data_T, sim_data_HF, samplesO2, samplesT, samplesHF) {
-    inputs = input_data;
-    outputsO2 = samplesO2;
-    outputsT = samplesT;
-    outputsHF = samplesHF;
-    simO2 = sim_data_O2;
-    simT = sim_data_T;
-    simHF = sim_data_HF;
+function make_graphs(error, input_data, simO2, simT, simHF, samplesO2, samplesT, samplesHF) {
 
     if (error != null) {
         console.log(error);
@@ -152,7 +137,15 @@ function make_graphs(error, input_data, sim_data_O2, sim_data_T, sim_data_HF, sa
 
     var data = map_data_for_pcp(input_data, "inference").concat(map_data_for_pcp(input_data, "simulation"));
     var dimensions = format_dimensions(data);
-    pcp_inputs = d3.parcoords()("#pcp_inputs")
+    var title = 'Inputs';
+    d3.select('body').append('h1').html(title);
+    d3.select('body').append('div')
+        .attr('id', 'pcp_' + title)
+        .attr('class', 'parcoords')
+        .style("width", "1200px")
+        .style("height", "150px");
+
+    pcp_inputs = d3.parcoords()("#pcp_" + title)
         .data(data)
         .hideAxis(["key", "series"])
         .color(colormap)
@@ -166,8 +159,6 @@ function make_graphs(error, input_data, sim_data_O2, sim_data_T, sim_data_HF, sa
         .brushMode("1D-axes")
         .on("brush", update_selection)
         .on("render", update_selection);
-
-    // pcp_i2 = create_parcoord('Test', data, dimensions, colormap);
 
     data = map_data_for_pcp(samplesO2, "inference").concat(map_data_for_pcp(simO2, "simulation"));
     dimensions = format_dimensions(data);
