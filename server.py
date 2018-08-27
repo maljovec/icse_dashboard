@@ -41,9 +41,22 @@ configuration['colors'] = {
     'inference': "#4daf4a",
     'default': "#4daf4a"}
 
+configuration['ticks'] = {
+    'O2': [],
+    'HEAT_FLUX': [],
+    'TEMPERATURE': []
+}
+
+configuration['ticks'] = {
+    'O2': [],
+    'HEAT_FLUX': [],
+    'TEMPERATURE': []
+}
+
 ########################################################################
 # Setup Flask routes
 app = Flask(__name__)
+
 
 @app.route('/')
 def index():
@@ -54,13 +67,16 @@ def index():
 #     text = request.form['text']
 #     return names(filename)
 
+
 @app.route("/configuration")
 def get_configuration():
     return json.dumps(configuration)
 
+
 @app.route("/data/design")
 def get_design_points():
     return dsgn.T.to_json()
+
 
 @app.route("/data/simulation/<output_type>")
 def get_simulation_points(output_type):
@@ -68,6 +84,7 @@ def get_simulation_points(output_type):
     if output_type == 'TEMPERATURE':
         return json.dumps({})
     return sims.loc[output_type].to_json()
+
 
 @app.route("/data/samples/<output_type>")
 def get_sample_points(output_type):
@@ -87,6 +104,7 @@ def get_sample_points(output_type):
                 sample_data[case][loc] = y_samples[i, j]
 
     return json.dumps(sample_data)
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=PORT_NUMBER, debug=True)
