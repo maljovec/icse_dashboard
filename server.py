@@ -33,6 +33,15 @@ locals().update(input_dict)
 y_samples = y_surrogate(dsgn.values, Θ)
 
 ########################################################################
+# Exposing configuration of UI to the python side
+configuration = {}
+configuration['colors'] = {
+    'experiment': "#e41a1c",
+    'simulation': "#377eb8",
+    'inference': "#4daf4a",
+    'default': "#4daf4a"}
+
+########################################################################
 # Setup Flask routes
 app = Flask(__name__)
 
@@ -44,6 +53,10 @@ def index():
 # def update_selection():
 #     text = request.form['text']
 #     return names(filename)
+
+@app.route("/configuration")
+def get_configuration():
+    return json.dumps(configuration)
 
 @app.route("/data/design")
 def get_design_points():
