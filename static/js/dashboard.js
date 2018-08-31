@@ -55,7 +55,7 @@ function format_dimensions(data) {
         dimensions[j] = {
             // ticks: 3,
             tickValues: [min_value, (min_value + max_value) / 2., max_value],
-            title: "D" + dim_count++,
+            title: "\u21f3",//"\u2195",
             // This prevents the axis flipping from working:
             yscale: yScale
         };
@@ -127,26 +127,80 @@ function preview_selection(label) {
     }
 }
 
-function create_parcoord(title, data, dimensions, colormap) {
-    d3.select('body').append('h1').html(title);
-    d3.select('body').append('div')
+function create_parcoord(box, title, data, dimensions, colormap) {
+    box.append('h2').html(title);
+    box.append("label")
+        .text('Selection Mode:')
+        .style("width", "100px")
+        .style("display", "inline-block");
+    var brush_select = box.append('select');
+    box.append('div')
         .attr('id', 'pcp_' + title)
         .attr('class', 'parcoords')
         .style("z-index", 1)
         .style("width", "100%")
         .style("height", "150px");
-    return d3.parcoords()('#pcp_' + title)
-        .data(data)
-        .dimensions(dimensions)
-        .color(colormap)
-        .hideAxis(["key", "series"])
-        .render()
-        .shadows()
-        .reorderable()
-        .brushMode("1D-axes")
-        .rotateLabels(true)
-        .on("brush", update_selection)
-        .on("render", update_selection);
+
+    var parcoords;
+
+    if (dimensions != null) {
+        parcoords = d3.parcoords()('#pcp_' + title)
+            .data(data)
+            .dimensions(dimensions)
+            .color(colormap)
+            .hideAxis(["key", "series"])
+            .render()
+            .shadows()
+            .reorderable()
+            .brushMode("1D-axes")
+            .rotateLabels(true)
+            .on("brush", update_selection)
+            .on("render", update_selection);
+    }
+    else {
+        parcoords = d3.parcoords()('#pcp_' + title)
+            .data(data)
+            .color(colormap)
+            .hideAxis(["key", "series"])
+            .render()
+            .shadows()
+            .reorderable()
+            .brushMode("1D-axes")
+            .rotateLabels(true)
+            .on("brush", update_selection)
+            .on("render", update_selection);
+    }
+
+    brush_select.selectAll('option')
+        .data(parcoords.brushModes())
+        .enter()
+        .append('option')
+        .text(function (d) { return d; });
+
+    brush_select.on('change', function () {
+        parcoords.brushMode(this.value);
+        switch (this.value) {
+            case 'None':
+                d3.select("#pStrums").style("visibility", "hidden");
+                d3.select("#lblPredicate").style("visibility", "hidden");
+                d3.select("#sltPredicate").style("visibility", "hidden");
+                d3.select("#btnReset").style("visibility", "hidden");
+                break;
+            case '2D-strums':
+                d3.select("#pStrums").style("visibility", "visible");
+                break;
+            default:
+                d3.select("#pStrums").style("visibility", "hidden");
+                d3.select("#lblPredicate").style("visibility", "visible");
+                d3.select("#sltPredicate").style("visibility", "visible");
+                d3.select("#btnReset").style("visibility", "visible");
+                break;
+        }
+    });
+
+    brush_select.property('value', '1D-axes');
+
+    return parcoords;
 }
 
 function make_graphs(error, input_data, simO2, simT, simHF, samplesO2, samplesT, samplesHF, config) {
@@ -169,15 +223,14 @@ function make_graphs(error, input_data, simO2, simT, simHF, samplesO2, samplesT,
 
     // Generate the legend
     var legend_div = d3.select('body').append('div')
-        .attr('id', 'legend')
-        .attr('style', 'opacity: 1; background-color: #FFFFFF; width: 200px; position: fixed; border: 1px solid black; top: 20px; right: 30px; margin: 0px; z-index: 2;');
+        .attr('id', 'legend');
 
     legend_div.append('h2').html('Legend')
         .attr('style', 'text-align: center; margin: 0px;');
 
     var graphic = legend_div.append('svg')
         .attr('width', '200px')
-        .attr('height', '100px')
+        .attr('height', '80px')
         .append('g');
     // graphic.append("rect")
     //     .attr("x", 0)
@@ -202,7 +255,7 @@ function make_graphs(error, input_data, simO2, simT, simHF, samplesO2, samplesT,
             graphic.append("line")
                 .attr("x1", 100)
                 .attr("y1", y_pos - (line_height) / 4.)
-                .attr("x2", 190)
+                .attr("x2", 180)
                 .attr("y2", y_pos - (line_height) / 4.)
                 .attr("stroke-width", 2)
                 .attr("stroke", value)
@@ -217,43 +270,68 @@ function make_graphs(error, input_data, simO2, simT, simHF, samplesO2, samplesT,
         .attr('class', 'spacer')
         .attr('style', 'height: 100px;');
 
+    var experimental_data = {
+        "Base_Case": {
+            "AbsCD":[0.5,1.5],
+            "CO2_PC1":[0,0.5],
+            "CO2_PC2":[0,0.5],
+            "Csmag":[0.1,0.3],
+            "O2_PC1":[0.0,0.5],
+            "O2_PC2":[0.0,0.5],
+            "ThardB":[1825,1875],
+            "Tslag":[1500,1520],
+            "devolTmu":[820,832],
+            "key":"Case_1",
+            "ln(Avisc)":[-54.654074025,-50],
+            "log(Kdeposit)":[0,0.5],
+            "log(enam)":[-4,-2],
+            "series":"experiment",
+            "tSootBlow":[2,8]
+        }
+    };
+    console.log(experimental_data);
     var data = map_data_for_pcp(input_data, "inference").concat(map_data_for_pcp(input_data, "simulation"));
-    var dimensions = format_dimensions(data);
+    data = data.concat(map_data_for_pcp(experimental_data, "experiment"));
+    var dimensions = null; //format_dimensions(data);
     var title = 'Inputs';
-    d3.select('body').append('h1').html(title);
-    d3.select('body').append('div')
-        .attr('id', 'pcp_' + title)
-        .attr('class', 'parcoords')
-        .style("width", "100%")
-        .style("height", "150px")
-        .style("z-index", 1);
+    var box = d3.select('body').append('div').attr('class', 'box');
+    pcp_inputs = create_parcoord(box, "", data, dimensions, colormap);
+    // box.append('h1').html(title);
+    // box.append('div')
+    //     .attr('id', 'pcp_' + title)
+    //     .attr('class', 'parcoords')
+    //     .style("width", "100%")
+    //     .style("height", "150px")
+    //     .style("z-index", 1);
 
-    pcp_inputs = d3.parcoords()("#pcp_" + title)
-        .data(data)
-        .hideAxis(["key", "series"])
-        .color(colormap)
-        .render()
-        .shadows()
-        .reorderable()
-        // .smoothness(1)
-        .axisDots(size = 1)
-        // .bundleDimension("ThardB")
-        .rotateLabels(true)
-        .brushMode("1D-axes")
-        .on("brush", update_selection)
-        .on("render", update_selection);
+    // pcp_inputs = d3.parcoords()("#pcp_" + title)
+    //     .data(data)
+    //     .hideAxis(["key", "series"])
+    //     .color(colormap)
+    //     .render()
+    //     .shadows()
+    //     .reorderable()
+    //     // .smoothness(1)
+    //     .axisDots(size = 1)
+    //     // .bundleDimension("ThardB")
+    //     .rotateLabels(true)
+    //     .brushMode("1D-axes")
+    //     .on("brush", update_selection)
+    //     .on("render", update_selection);
 
+    var output_box = d3.select('body').append('div').attr('class', 'box');
+    output_box.append('h1').html("Outputs");
     data = map_data_for_pcp(samplesO2, "inference").concat(map_data_for_pcp(simO2, "simulation"));
     dimensions = format_dimensions(data);
-    pcp_O2 = create_parcoord('O2', data, dimensions, colormap);
+    pcp_O2 = create_parcoord(output_box, 'O2', data, dimensions, colormap);
 
     data = map_data_for_pcp(samplesT, "inference").concat(map_data_for_pcp(simT, "simulation"));
     dimensions = format_dimensions(data);
-    pcp_temperature = create_parcoord('Temperature', data, dimensions, colormap);
+    pcp_temperature = create_parcoord(output_box, 'Temperature', data, dimensions, colormap);
 
     data = map_data_for_pcp(samplesHF, "inference").concat(map_data_for_pcp(simHF, "simulation"));
     dimensions = format_dimensions(data);
-    pcp_heat_flux = create_parcoord('Heat_Flux', data, dimensions, colormap);
+    pcp_heat_flux = create_parcoord(output_box, 'Heat_Flux', data, dimensions, colormap);
 
     d3.selectAll(".dimension")
         .selectAll(".tick text")
