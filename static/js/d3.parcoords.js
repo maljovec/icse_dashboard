@@ -650,7 +650,6 @@ function color_path(d, ctx) {
     // Reset the linewidth if it was modified
     if (has_array) {
         ctx.lineWidth = linewidth;
-        console.log(ctx.lineWidth);
     }
 };
 
