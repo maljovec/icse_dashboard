@@ -626,13 +626,32 @@ function single_curve(d, ctx) {
 
 // draw single polyline
 function color_path(d, ctx) {
+    // Determine if this the data to be displayed is on the axis, if so,
+    // we need to make its linewidth thicker.
+    var linewidth = ctx.lineWidth;
+    var has_array = false;
+    for (var key in d) {
+        if (Array.isArray(d[key])) {
+            has_array = true;
+            break;
+        }
+    }
+
+    if (has_array) {
+        ctx.lineWidth = 2 * linewidth;
+    }
 	ctx.beginPath();
 	if ((__.bundleDimension !== null && __.bundlingStrength > 0) || __.smoothness > 0) {
 		single_curve(d, ctx);
 	} else {
 		single_path(d, ctx);
 	}
-	ctx.stroke();
+    ctx.stroke();
+    // Reset the linewidth if it was modified
+    if (has_array) {
+        ctx.lineWidth = linewidth;
+        console.log(ctx.lineWidth);
+    }
 };
 
 // draw many polylines of the same color

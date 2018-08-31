@@ -289,7 +289,6 @@ function make_graphs(error, input_data, simO2, simT, simHF, samplesO2, samplesT,
             "tSootBlow":[2,8]
         }
     };
-    console.log(experimental_data);
     var data = map_data_for_pcp(input_data, "inference").concat(map_data_for_pcp(input_data, "simulation"));
     data = data.concat(map_data_for_pcp(experimental_data, "experiment"));
     var dimensions = null; //format_dimensions(data);
