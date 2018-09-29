@@ -689,8 +689,15 @@ d3.parcoords = function (config) {
         d3.entries(__.dimensions).forEach(function (p, i) {  //p isn't really p
             var datum = d[p.key];
             if (Array.isArray(datum)) {
-                ctx.moveTo(position(p.key), typeof d[p.key][0] == 'undefined' ? getNullPosition() : __.dimensions[p.key].yscale(d[p.key][0]));
-                ctx.lineTo(position(p.key), typeof d[p.key][1] == 'undefined' ? getNullPosition() : __.dimensions[p.key].yscale(d[p.key][1]));
+                for(var i = 0; i < datum.length; i++) {
+                    ctx.moveTo(position(p.key) - __.dimensions[p.key].innerTickSize, typeof datum[i] == 'undefined' ? getNullPosition() : __.dimensions[p.key].yscale(datum[i]));
+                    ctx.lineTo(position(p.key) + __.dimensions[p.key].innerTickSize, typeof datum[i] == 'undefined' ? getNullPosition() : __.dimensions[p.key].yscale(datum[i]));
+
+                    if ( i+1 < datum.length) {
+                        ctx.moveTo(position(p.key), typeof datum[i] == 'undefined' ? getNullPosition() : __.dimensions[p.key].yscale(datum[i]));
+                        ctx.lineTo(position(p.key), typeof datum[i+1] == 'undefined' ? getNullPosition() : __.dimensions[p.key].yscale(datum[i+1]));
+                    }
+                }
             }
             else {
                 if (i == 0) {
@@ -2384,6 +2391,7 @@ d3.parcoords = function (config) {
         };
 
     }());
+
     pc.interactive = function () {
         flags.interactive = true;
         return this;
