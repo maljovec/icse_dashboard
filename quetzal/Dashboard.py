@@ -12,7 +12,7 @@ class Dashboard(object):
         if data is None:
             data = {}
         if configuration is None:
-            data = {}
+            configuration = {}
         self.configuration = configuration
         self.data = data
         self.host = kwargs.get("host", "127.0.0.1")
@@ -32,6 +32,9 @@ class Dashboard(object):
         if data is None:
             data = {}
         self.data[axes_name][series_name][case_name] = data
+
+    def config(self, key, value):
+        self.configuration[key] = value
 
     def run(self):
         app = Flask(__name__)

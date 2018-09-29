@@ -124,8 +124,12 @@ function preview_selection(label) {
 
 function create_parcoord(box, title, data, config) {
     var dimensions;
-    var fixed_scales = title in config['scales'] && config['scales'][title] == 'shared';
-    use_names = !(title in config['labels'] && config['labels'][title] == 'none');
+    var scales = 'scales' in config ? scales = config['scales'] : {};
+    var dimension_labels = 'dimension_labels' in config ? config['dimension_labels'] : {};
+    var tick_labels = 'tick_labels' in config ? config['tick_labels'] : {};
+
+    var fixed_scales = title in scales && scales[title] == 'shared';
+    use_names = !(title in dimension_labels && dimension_labels[title] == 'none');
     dimensions = format_dimensions(data, fixed_scales, use_names);
 
     var colors = config['colors'];
@@ -193,6 +197,12 @@ function create_parcoord(box, title, data, config) {
     });
     brush_select.property('value', '1D-axes');
 
+    if (!(title in tick_labels) || tick_labels[title] != 'visible') {
+        container.selectAll(".dimension")
+        .selectAll(".tick text")
+        .remove();
+    }
+
     return parcoords;
 }
 
@@ -202,7 +212,7 @@ function make_graphs(error, input_data, config) {
         return;
     }
 
-    var colors = config['colors'];
+    var colors = 'colors' in config['colors'] ? config['colors'] : {};
     line_height = 25;
     var legend_height = line_height * Object.keys(colors).length;
 
@@ -256,8 +266,4 @@ function make_graphs(error, input_data, config) {
         var box = d3.select('body').append('div').attr('class', 'box');
         pcps[title] = create_parcoord(box, title, data, config);
     }
-
-    d3.selectAll(".dimension")
-        .selectAll(".tick text")
-        .remove();
 };

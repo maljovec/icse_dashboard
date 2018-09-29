@@ -63,18 +63,7 @@ y_samples = y_surrogate(dsgn.values, Θ)
 ########################################################################
 # Make the data and configuration available for dashboard consumption
 
-configuration = {
-    "colors": {
-        "experiment": "#e41a1c",
-        "simulation": "#377eb8",
-        "inference": "#4daf4a",
-        "default": "#000000",
-    },
-    "scales": {"O2": "shared", "HEAT FLUX": "shared", "TEMPERATURE": "shared"},
-    "labels": {"O2": "none", "HEAT FLUX": "none", "TEMPERATURE": "none"},
-}
-
-dashboard = Dashboard(configuration=configuration)
+dashboard = Dashboard()
 dashboard.add_axes('Inputs')
 dashboard.add_series("Inputs", "simulation", dsgn.to_dict("index"))
 dashboard.add_series("Inputs", "inference", dsgn.to_dict("index"))
@@ -84,5 +73,35 @@ for output_type in sims.index.levels[0]:
     dashboard.add_series(output_type, "simulation", get_simulation_data(sims, output_type))
     dashboard.add_series(output_type, "inference", get_inference_data(sims, y_samples, output_type))
     dashboard.add_series(output_type, "experiment", get_experimental_data(expt, output_type))
+
+colors = {
+        "experiment": "#e41a1c",
+        "simulation": "#377eb8",
+        "inference": "#4daf4a",
+        "default": "#000000",
+}
+dashboard.config('colors', colors)
+
+scales = {
+    "O2": "shared",
+    "HEAT FLUX": "shared",
+    "TEMPERATURE": "shared"
+}
+dashboard.config('scales', scales)
+
+dimension_labels = {
+    "O2": "none",
+    "HEAT FLUX": "none",
+    "TEMPERATURE": "none"
+}
+dashboard.config('dimension_labels', dimension_labels)
+
+tick_labels = {
+    "Inputs": "visible",
+    "O2": "hidden",
+    "HEAT FLUX": "hidden",
+    "TEMPERATURE": "hidden"
+}
+dashboard.config('tick_labels', tick_labels)
 
 dashboard.run()
