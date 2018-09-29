@@ -64,10 +64,7 @@ function update_selection() {
     var current_selection = null;
     for (const [title, pcp] of Object.entries(pcps)) {
         var items = pcp.brushed();
-        // if something appears as selected and there is at least one
-        // dimension that has been brushed for this PCP, then add its
-        // selection to the list of highlighted data.
-        if (items && Object.keys(pcp.brushExtents()).length) {
+        if (items) {
             var selected = new Set(items.map(function (d) { return d.key + '_' + d.series; }));
             if (current_selection != null) {
                 current_selection = new Set(intersect(current_selection, selected));
@@ -95,10 +92,7 @@ function preview_selection(label) {
     var current_selection = null;
     for (const [title, pcp] of Object.entries(pcps)) {
         var items = pcp.brushed();
-        // if something appears as selected and there is at least one
-        // dimension that has been brushed for this PCP, then add its
-        // selection to the list of highlighted data.
-        if (items && Object.keys(pcp.brushExtents()).length) {
+        if (items) {
             var selected = new Set(items.map(function (d) { return d.key + '_' + d.series; }));
             if (current_selection != null) {
                 current_selection = new Set(intersect(current_selection, selected));
@@ -132,7 +126,7 @@ function create_parcoord(box, title, data, config) {
     use_names = !(title in dimension_labels && dimension_labels[title] == 'none');
     dimensions = format_dimensions(data, fixed_scales, use_names);
 
-    var colors = config['colors'];
+    var colors = 'colors' in config ? config['colors'] : {};
     function colormap(d) {
         if (d.series in colors) {
             return colors[d.series];
@@ -212,7 +206,7 @@ function make_graphs(error, input_data, config) {
         return;
     }
 
-    var colors = 'colors' in config['colors'] ? config['colors'] : {};
+    var colors = 'colors' in config ? config['colors'] : {};
     line_height = 25;
     var legend_height = line_height * Object.keys(colors).length;
 

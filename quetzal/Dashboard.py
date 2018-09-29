@@ -3,6 +3,7 @@ from flask import Flask
 from flask import render_template
 import webbrowser
 
+
 class Dashboard(object):
     """ A Dashboard class for visualizing multidimensional data using
         parallel coordinates in d3
@@ -51,5 +52,5 @@ class Dashboard(object):
         def get_data():
             return json.dumps(self.data)
 
-        webbrowser.open('http://' + self.host + ':' + self.port)
+        webbrowser.open("http://" + self.host + ":" + self.port)
         app.run(host=self.host, port=self.port, debug=False)

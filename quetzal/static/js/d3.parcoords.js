@@ -185,6 +185,7 @@ d3.parcoords = function (config) {
         });
         return arr;
     };
+
     /** adjusts an axis' default range [h()+1, 1] if a NullValueSeparator is set */
     function getRange() {
         if (__.nullValueSeparator == "bottom") {
@@ -347,6 +348,7 @@ d3.parcoords = function (config) {
 
         return this;
     };
+
     pc.detectDimensions = function () {
         pc.dimensions(pc.applyDimensionDefaults());
         return this;
@@ -401,6 +403,7 @@ d3.parcoords = function (config) {
             });
         return types;
     };
+
     pc.render = function () {
         // try to autodetect dimensions and create scales
         if (!d3.keys(__.dimensions).length) {
@@ -480,6 +483,7 @@ d3.parcoords = function (config) {
             brushedQueue([]); // This is needed to clear the currently brushed items
         }
     };
+
     function compute_cluster_centroids(d) {
 
         var clusterCentroids = d3.map();
@@ -582,7 +586,9 @@ d3.parcoords = function (config) {
 
         return cps;
 
-    }; pc.shadows = function () {
+    };
+
+    pc.shadows = function () {
         flags.shadows = true;
         pc.alphaOnBrushed(0.1);
         pc.render();
@@ -714,6 +720,7 @@ d3.parcoords = function (config) {
         ctx.highlight.strokeStyle = d3.functor(__.color)(d, i);
         return color_path(d, ctx.highlight);
     };
+
     pc.clear = function (layer) {
         ctx[layer].clearRect(0, 0, w() + 2, h() + 2);
 
@@ -728,6 +735,7 @@ d3.parcoords = function (config) {
         }
         return this;
     };
+
     d3.rebind(pc, axis, "ticks", "orient", "tickValues", "tickSubdivide", "tickSize", "tickPadding", "tickFormat");
 
     function flipAxisAndUpdatePCP(dimension) {
@@ -1154,6 +1162,7 @@ d3.parcoords = function (config) {
             var actives = d3.keys(__.dimensions).filter(is_brushed),
                 extents = actives.map(function (p) { return brushes[p].extent(); });
 
+
             // We don't want to return the full data set when there are no axes brushed.
             // Actually, when there are no axes brushed, by definition, no items are
             // selected. So, let's avoid the filtering and just return false.
@@ -1174,7 +1183,12 @@ d3.parcoords = function (config) {
                 "number": function (d, p, dimension) {
                     if (typeof __.dimensions[p].yscale.rangePoints === "function") { // if it is ordinal
                         return extents[dimension][0] <= __.dimensions[p].yscale(d[p]) && __.dimensions[p].yscale(d[p]) <= extents[dimension][1]
-                    } else {
+                    }
+                    else if (Array.isArray(d[p])) {
+                        return extents[dimension][0] <= d[p][1] && d[p][0] <= extents[dimension][1]
+                    }
+                    else {
+
                         return extents[dimension][0] <= d[p] && d[p] <= extents[dimension][1]
                     }
                 },

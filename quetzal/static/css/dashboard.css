@@ -12,6 +12,7 @@ h2 {
     border: 1px solid black;
     margin: 10px;
     padding: 10px;
+    border-radius: 25px;
     -webkit-box-shadow: 5px 5px 10px 0px rgba(0,0,0,0.5);
     -moz-box-shadow: 5px 5px 10px 0px rgba(0,0,0,0.5);
     box-shadow: 5px 5px 10px 0px rgba(0,0,0,0.5);
@@ -23,6 +24,7 @@ h2 {
     width: 200px;
     position: fixed;
     border: 1px solid black;
+    border-radius: 25px;
     top: 20px;
     right: 30px;
     margin: 0px;
