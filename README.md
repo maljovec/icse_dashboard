@@ -21,20 +21,20 @@ pip install -r requirements.txt
 ```
 
 # Running
-Simply start the Flask server using the command below:
+There are two examples that can be run:
 
 ```bash
-python server.py
+python example_simple.py
 ```
 
-Then navigate your browser to ```localhost:5001```.
+```bash
+python example.py
+```
+
+Then navigate your browser to ```localhost:5000```.
 
 # Known Issues
 
-* The code still needs to be reorganized to accommodate more generic data.
-* Addition of a legend.
-* Explore the use of scatterplot projections and other methods of summarizing
-the many output dimensions.
-* Expose the formatting to the python side.
-* Package up to allow user to call it from their code.
-* Generate more data and find example of experimental data.
+* Explore the use of scatterplot projections and other methods of summarizing the many output dimensions.
+* Continue exposing the formatting to the python side.
+* Generate more data and validate example with experimental data.
