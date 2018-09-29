@@ -1192,7 +1192,7 @@ d3.parcoords = function (config) {
                         return extents[dimension][0] <= __.dimensions[p].yscale(d[p]) && __.dimensions[p].yscale(d[p]) <= extents[dimension][1]
                     }
                     else if (Array.isArray(d[p])) {
-                        return extents[dimension][0] <= d[p][1] && d[p][0] <= extents[dimension][1]
+                        return extents[dimension][0] <= d[p][d[p].length-1] && d[p][0] <= extents[dimension][1]
                     }
                     else {
 
