@@ -18,43 +18,44 @@ function map_data_for_pcp(in_data, series_name) {
 
 var pcps = {};
 
-function format_dimensions(data) {
+function format_dimensions(data, fixed_scale = true, use_names = false) {
     min_value = null;
     max_value = null;
 
-    for (var i in data) {
-        for (const [key, value] of Object.entries(data[i])) {
-            if (key == 'series' || key == 'key') {
-                continue;
-            }
+    if (fixed_scale) {
+        for (var i in data) {
+            for (const [key, value] of Object.entries(data[i])) {
+                if (key == 'series' || key == 'key') {
+                    continue;
+                }
 
-            if (min_value == null || value < min_value) {
-                min_value = value;
-            }
-            if (max_value == null || value > max_value) {
-                max_value = value;
+                if (min_value == null || value < min_value) {
+                    min_value = value;
+                }
+                if (max_value == null || value > max_value) {
+                    max_value = value;
+                }
             }
         }
     }
-    // Somehow, I need this information before the thing is created, for
-    // now I will assume the user is not modifying this information, but
-    // this is a brittle solution
-    // var dummy = d3.parcoords();
-    // var range = dummy.height() - dummy.margin().top - dummy.margin().bottom;
-    // console.log(range);
-
     var dimensions = {};
     var dim_count = 0;
     for (var j in data[0]) {
-        var yScale = d3.scale.linear()
-            .domain([min_value, max_value]).range([115, 1]);
-        dimensions[j] = {
-            // ticks: 3,
-            tickValues: [min_value, (min_value + max_value) / 2., max_value],
-            title: "\u21f3",//"\u2195",
+        dimensions[j] = {};
+        if (fixed_scale) {
+            // TODO: hard-coded scale here:
+            var yScale = d3.scale.linear()
+                .domain([min_value, max_value]).range([115, 1]);
+            dimensions[j].tickValues = [min_value, (min_value + max_value) / 2., max_value];
             // This prevents the axis flipping from working:
-            yscale: yScale
-        };
+            dimensions[j].yscale = yScale;
+        }
+        if (use_names) {
+            dimensions[j].title = j;
+        }
+        else {
+            dimensions[j].title = "\u21f3";
+        }
     }
     return dimensions;
 }
@@ -121,49 +122,48 @@ function preview_selection(label) {
     }
 }
 
-function create_parcoord(box, title, data, dimensions, colormap) {
+function create_parcoord(box, title, data, config) {
+    var dimensions;
+    var fixed_scales = title in config['scales'] && config['scales'][title] == 'shared';
+    use_names = !(title in config['labels'] && config['labels'][title] == 'none');
+    dimensions = format_dimensions(data, fixed_scales, use_names);
+
+    var colors = config['colors'];
+    function colormap(d) {
+        if (d.series in colors) {
+            return colors[d.series];
+        }
+        else {
+            return colors['default'];
+        }
+    }
+
+    var container_id = 'pcp_' + title.replace(/ /g, '_');
     box.append('h2').html(title);
     box.append("label")
         .text('Selection Mode:')
         .style("width", "100px")
         .style("display", "inline-block");
     var brush_select = box.append('select');
-    box.append('div')
-        .attr('id', 'pcp_' + title)
+    var container = box.append('div')
+        .attr('id', container_id)
         .attr('class', 'parcoords')
         .style("z-index", 1)
         .style("width", "100%")
         .style("height", "150px");
 
-    var parcoords;
-
-    if (dimensions != null) {
-        parcoords = d3.parcoords()('#pcp_' + title)
-            .data(data)
-            .dimensions(dimensions)
-            .color(colormap)
-            .hideAxis(["key", "series"])
-            .render()
-            .shadows()
-            .reorderable()
-            .brushMode("1D-axes")
-            .rotateLabels(false)
-            .on("brush", update_selection)
-            .on("render", update_selection);
-    }
-    else {
-        parcoords = d3.parcoords()('#pcp_' + title)
-            .data(data)
-            .color(colormap)
-            .hideAxis(["key", "series"])
-            .render()
-            .shadows()
-            .reorderable()
-            .brushMode("1D-axes")
-            .rotateLabels(true)
-            .on("brush", update_selection)
-            .on("render", update_selection);
-    }
+    var parcoords = d3.parcoords()('#' + container_id)
+        .data(data)
+        .dimensions(dimensions)
+        .color(colormap)
+        .hideAxis(["key", "series"])
+        .render()
+        .shadows()
+        .reorderable()
+        .brushMode("1D-axes")
+        .rotateLabels(use_names)
+        .on("brush", update_selection)
+        .on("render", update_selection);
 
     brush_select.selectAll('option')
         .data(parcoords.brushModes())
@@ -191,7 +191,6 @@ function create_parcoord(box, title, data, dimensions, colormap) {
                 break;
         }
     });
-
     brush_select.property('value', '1D-axes');
 
     return parcoords;
@@ -204,14 +203,6 @@ function make_graphs(error, input_data, config) {
     }
 
     var colors = config['colors'];
-    function colormap(d) {
-        if (d.series in colors) {
-            return colors[d.series];
-        }
-        else {
-            return colors['default'];
-        }
-    }
     line_height = 25;
     var legend_height = line_height * Object.keys(colors).length;
 
@@ -226,14 +217,6 @@ function make_graphs(error, input_data, config) {
         .attr('width', '200px')
         .attr('height', '80px')
         .append('g');
-    // graphic.append("rect")
-    //     .attr("x", 0)
-    //     .attr("y", 0)
-    //     .attr("width", 200)
-    //     .attr("height", legend_height)
-    //     .attr("fill", "#FFFFFF")
-    //     .attr("stroke", "#000000")
-    //     .attr("stroke-width", 1);
 
     var y_pos = line_height;
     for (const [key, value] of Object.entries(colors)) {
@@ -265,21 +248,13 @@ function make_graphs(error, input_data, config) {
         .attr('style', 'height: 100px;');
 
     for (const [title, data_object] of Object.entries(input_data)) {
-        var dimensions;
         var data = [];
         for (const [series, values] of Object.entries(data_object)) {
             data = data.concat(map_data_for_pcp(values, series));
         }
 
-        if (title in config['scales'] && config['scales'][title] == 'shared') {
-            dimensions = format_dimensions(data);
-        }
-        else {
-            dimensions = null;
-        }
         var box = d3.select('body').append('div').attr('class', 'box');
-        console.log(title, data);
-        pcps[title] = create_parcoord(box, title, data, dimensions, colormap);
+        pcps[title] = create_parcoord(box, title, data, config);
     }
 
     d3.selectAll(".dimension")
