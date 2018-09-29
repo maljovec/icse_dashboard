@@ -1,7 +1,7 @@
 import json
 from flask import Flask
 from flask import render_template
-
+import webbrowser
 
 class Dashboard(object):
     """ A Dashboard class for visualizing multidimensional data using
@@ -14,7 +14,7 @@ class Dashboard(object):
 
         self.configuration = configuration
         self.data = data
-        self.host = kwargs.get("host", "0.0.0.0")
+        self.host = kwargs.get("host", "127.0.0.1")
         self.port = kwargs.get("port", "5000")
 
     def run(self):
@@ -32,4 +32,5 @@ class Dashboard(object):
         def get_data():
             return json.dumps(self.data)
 
+        webbrowser.open('http://' + self.host + ':' + self.port)
         app.run(host=self.host, port=self.port, debug=False)
