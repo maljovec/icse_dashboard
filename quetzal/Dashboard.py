@@ -8,14 +8,30 @@ class Dashboard(object):
         parallel coordinates in d3
     """
 
-    def __init__(self, data, configuration=None, name=None, **kwargs):
+    def __init__(self, data=None, configuration=None, name=None, **kwargs):
+        if data is None:
+            data = {}
         if configuration is None:
-            configuration = {}
-
+            data = {}
         self.configuration = configuration
         self.data = data
         self.host = kwargs.get("host", "127.0.0.1")
         self.port = kwargs.get("port", "5000")
+
+    def add_axes(self, axes_name, data=None):
+        if data is None:
+            data = {}
+        self.data[axes_name] = data
+
+    def add_series(self, axes_name, series_name, data=None):
+        if data is None:
+            data = {}
+        self.data[axes_name][series_name] = data
+
+    def add_case(self, axes_name, series_name, case_name, data=None):
+        if data is None:
+            data = {}
+        self.data[axes_name][series_name][case_name] = data
 
     def run(self):
         app = Flask(__name__)

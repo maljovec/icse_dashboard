@@ -74,17 +74,15 @@ configuration = {
     "labels": {"O2": "none", "HEAT FLUX": "none", "TEMPERATURE": "none"},
 }
 
-data = {}
-data["Inputs"] = {}
-data["Inputs"]["simulation"] = dsgn.to_dict("index")
-data["Inputs"]["inference"] = dsgn.to_dict("index")
-for output_type in sims.index.levels[0]:
-    data[output_type] = {}
-    data[output_type]["simulation"] = get_simulation_data(sims, output_type)
-    data[output_type]["inference"] = get_inference_data(
-        sims, y_samples, output_type
-    )
-    data[output_type]["experiment"] = get_experimental_data(expt, output_type)
+dashboard = Dashboard(configuration=configuration)
+dashboard.add_axes('Inputs')
+dashboard.add_series("Inputs", "simulation", dsgn.to_dict("index"))
+dashboard.add_series("Inputs", "inference", dsgn.to_dict("index"))
 
-dashboard = Dashboard(data, configuration)
+for output_type in sims.index.levels[0]:
+    dashboard.add_axes(output_type)
+    dashboard.add_series(output_type, "simulation", get_simulation_data(sims, output_type))
+    dashboard.add_series(output_type, "inference", get_inference_data(sims, y_samples, output_type))
+    dashboard.add_series(output_type, "experiment", get_experimental_data(expt, output_type))
+
 dashboard.run()
