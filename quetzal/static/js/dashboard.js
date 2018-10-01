@@ -3,7 +3,50 @@ d3.queue()
     .defer(d3.json, "/configuration")
     .await(make_graphs);
 
+var pcps = {};
+
 const intersect = (set1, set2) => [...set1].filter(num => set2.has(num))
+
+function dragElement(elmnt) {
+    var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+    if (document.getElementById(elmnt.id + "_header")) {
+        // if present, the header is where you move the DIV from:
+        document.getElementById(elmnt.id + "_header").onmousedown = dragMouseDown;
+    } else {
+        // otherwise, move the DIV from anywhere inside the DIV:
+        elmnt.onmousedown = dragMouseDown;
+    }
+
+    function dragMouseDown(e) {
+        e = e || window.event;
+        e.preventDefault();
+        // get the mouse cursor position at startup:
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
+        // call a function whenever the cursor moves:
+        document.onmousemove = elementDrag;
+    }
+
+    function elementDrag(e) {
+        e = e || window.event;
+        e.preventDefault();
+        // calculate the new cursor position:
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        // set the element's new position:
+        elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+        elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+    }
+
+    function closeDragElement() {
+        // stop moving when mouse button is released:
+        document.onmouseup = null;
+        document.onmousemove = null;
+    }
+}
 
 function map_data_for_pcp(in_data, series_name) {
     var out_data = d3.entries(in_data).map(function (d) {
@@ -15,8 +58,6 @@ function map_data_for_pcp(in_data, series_name) {
     });
     return out_data;
 }
-
-var pcps = {};
 
 function format_dimensions(data, fixed_scale = true, use_names = false) {
     min_value = null;
@@ -143,6 +184,25 @@ function create_parcoord(box, title, data, config) {
 
     var container_id = 'pcp_' + title.replace(/ /g, '_');
     box.append('h2').html(title);
+    // box.append('button').html(title)
+    //     .attr('class', 'collapsible');
+    // var content = box.append('div').attr('class', 'content');
+
+    // var coll = document.getElementsByClassName("collapsible");
+    // var i;
+
+    // for (i = 0; i < coll.length; i++) {
+    //     coll[i].addEventListener("click", function () {
+    //         this.classList.toggle("active");
+    //         var content = this.nextElementSibling;
+    //         if (content.style.display === "block") {
+    //             content.style.display = "none";
+    //         } else {
+    //             content.style.display = "block";
+    //         }
+    //     });
+    // }
+
     box.append("label")
         .text('Selection Mode:')
         .style("width", "100px")
@@ -198,19 +258,14 @@ function create_parcoord(box, title, data, config) {
 
     if (!(title in tick_labels) || tick_labels[title] != 'visible') {
         container.selectAll(".dimension")
-        .selectAll(".tick text")
-        .remove();
+            .selectAll(".tick text")
+            .remove();
     }
 
     return parcoords;
 }
 
-function make_graphs(error, input_data, config) {
-    if (error != null) {
-        console.log(error);
-        return;
-    }
-
+function make_legend(config) {
     var colors = 'colors' in config ? config['colors'] : {};
     line_height = 25;
     var legend_height = line_height * Object.keys(colors).length;
@@ -220,11 +275,14 @@ function make_graphs(error, input_data, config) {
         .attr('id', 'legend');
 
     legend_div.append('h2').html('Legend')
-        .attr('style', 'text-align: center; margin: 0px;');
+        .style('text-align', 'center')
+        .style('margin', '0px')
+        .style('cursor', 'move')
+        .attr('id', 'legend_header');
 
     var graphic = legend_div.append('svg')
         .attr('width', '200px')
-        .attr('height', '80px')
+        .attr('height', String(legend_height) + 'px')
         .append('g');
 
     var y_pos = line_height;
@@ -252,6 +310,20 @@ function make_graphs(error, input_data, config) {
             y_pos += line_height;
         }
     }
+
+    dragElement(document.getElementById("legend"));
+}
+
+function make_graphs(error, input_data, config) {
+    if (error != null) {
+        console.log(error);
+        return;
+    }
+
+    // The legend should be based on the actual data series' not the
+    // configuration alone
+    make_legend(config);
+
     d3.select('body').append('div')
         .attr('class', 'spacer')
         .attr('style', 'height: 100px;');
