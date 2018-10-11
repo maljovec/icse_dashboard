@@ -265,10 +265,18 @@ function create_parcoord(box, title, data, config) {
     return parcoords;
 }
 
-function make_legend(config) {
+function make_legend(input_data, config) {
+
+    series_set = new Set();
+    for (const [title, data_object] of Object.entries(input_data)) {
+        for (const [series, values] of Object.entries(data_object)) {
+            series_set.add(series);
+        }
+    }
+
     var colors = 'colors' in config ? config['colors'] : {};
     line_height = 25;
-    var legend_height = line_height * Object.keys(colors).length;
+    var legend_height = line_height * series_set.size;
 
     // Generate the legend
     var legend_div = d3.select('body').append('div')
@@ -286,29 +294,35 @@ function make_legend(config) {
         .append('g');
 
     var y_pos = line_height;
-    for (const [key, value] of Object.entries(colors)) {
-        if (key != 'default') {
-            graphic.append("text")
-                .attr("x", 5)
-                .attr("y", y_pos)
-                .text(key)
-                .on("mouseover", function () {
-                    preview_selection(key);
-                })
-                .on("mouseout", update_selection);
-            graphic.append("line")
-                .attr("x1", 100)
-                .attr("y1", y_pos - (line_height) / 4.)
-                .attr("x2", 180)
-                .attr("y2", y_pos - (line_height) / 4.)
-                .attr("stroke-width", 2)
-                .attr("stroke", value)
-                .on("mouseover", function () {
-                    preview_selection(key);
-                })
-                .on("mouseout", update_selection);
-            y_pos += line_height;
+
+    for (let key of series_set) {
+        var color;
+        if (key in colors) {
+            color = colors[key];
         }
+        else {
+            color = colors['default'];
+        }
+        graphic.append("text")
+            .attr("x", 5)
+            .attr("y", y_pos)
+            .text(key)
+            .on("mouseover", function () {
+                preview_selection(key);
+            })
+            .on("mouseout", update_selection);
+        graphic.append("line")
+            .attr("x1", 100)
+            .attr("y1", y_pos - (line_height) / 4.)
+            .attr("x2", 180)
+            .attr("y2", y_pos - (line_height) / 4.)
+            .attr("stroke-width", 2)
+            .attr("stroke", color)
+            .on("mouseover", function () {
+                preview_selection(key);
+            })
+            .on("mouseout", update_selection);
+        y_pos += line_height;
     }
 
     dragElement(document.getElementById("legend"));
@@ -322,7 +336,7 @@ function make_graphs(error, input_data, config) {
 
     // The legend should be based on the actual data series' not the
     // configuration alone
-    make_legend(config);
+    make_legend(input_data, config);
 
     d3.select('body').append('div')
         .attr('class', 'spacer')
