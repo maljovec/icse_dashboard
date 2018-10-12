@@ -10,7 +10,7 @@ var legend_glyphs = {};
 
 const intersect = (set1, set2) => [...set1].filter(num => set2.has(num))
 
-// For being able to drag an element around on the page
+// Encapsulated code for dragging an element around on the page
 function dragElement(elmnt) {
     var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
     if (document.getElementById(elmnt.id + "_header")) {
@@ -50,6 +50,77 @@ function dragElement(elmnt) {
         document.onmouseup = null;
         document.onmousemove = null;
     }
+}
+
+// Encapsulated code for highlighting items
+function addHighlightSettings(parcoords, container_id, data) {
+    var intersectionPoints;
+    function highlightLines(mouseCoordinates) {
+        var highlightedLines = getLinesForHighlight(mouseCoordinates);
+        if (highlightedLines && highlightedLines[0].length) {
+            var currentData = highlightedLines[0];
+            highlight_selection(currentData);
+        }
+    }
+    function getLinesForHighlight(mouseCoordinates) {
+        var rightAxisNumber = getNearAxis(mouseCoordinates);
+        if (intersectionPoints.length && rightAxisNumber) {
+            var leftAxisNumber = rightAxisNumber - 1;
+            var brushedData = parcoords.selected().length ? parcoords.selected() : data;
+            var currentData = [];
+            var currentIntersectionPoints = [];
+            intersectionPoints.forEach(function(d, i) {
+                if (isMouseOnLine(d[leftAxisNumber], d[rightAxisNumber], mouseCoordinates)) {
+                    currentData.push(brushedData[i]);
+                    currentIntersectionPoints.push(intersectionPoints[i]);
+                }
+            });
+            return [currentData, currentIntersectionPoints];
+        }
+    }
+    function isMouseOnLine(startIntersectionPoint, endIntersectionPoint, mouseCoordinates) {
+        var accuracy = 1;
+        var x0 = mouseCoordinates[0];
+        var y0 = mouseCoordinates[1];
+        var x1 = startIntersectionPoint[0];
+        var y1 = startIntersectionPoint[1];
+        var x2 = endIntersectionPoint[0];
+        var y2 = endIntersectionPoint[1];
+        var dX = x2 - x1;
+        var dY = y2 - y1;
+        var delta = Math.abs(dY * x0 - dX * y0 - x1 * y2 + x2 * y1) / Math.sqrt(Math.pow(dX, 2) + Math.pow(dY, 2));
+        return delta <= accuracy;
+    }
+    function getNearAxis(mouseCoordinates) {
+        var x = mouseCoordinates[0];
+        var intersectionPointsSample = intersectionPoints[0];
+        var leftMostXPoint = intersectionPointsSample[0][0];
+        var rightMostXPoint = intersectionPointsSample[intersectionPointsSample.length - 1][0];
+        if (leftMostXPoint <= x && x <= rightMostXPoint) {
+            for (var axisNumber = 0; axisNumber < intersectionPointsSample.length; axisNumber++) {
+                if (intersectionPointsSample[axisNumber][0] > x) { return axisNumber; }
+            }
+        }
+    }
+    function computeCentroids(data) {
+        var margins = parcoords.margin();
+        return parcoords.compute_real_centroids(data).map(function(d) { return [d[0] + margins.left, d[1] + margins.top]; });
+    }
+    function updateIntersectionPoints() {
+        var brushedData = parcoords.selected().length ? parcoords.selected() : data;
+        intersectionPoints = brushedData.map(function(d) { return computeCentroids(d) });
+    }
+
+    parcoords.on('select', function() { updateIntersectionPoints(); });
+    updateIntersectionPoints();
+    var svg = d3.select('#' + container_id + ' svg');
+    var svgElement = svg[0][0];
+    svg.on('mousemove', function() {
+        highlightLines(d3.mouse(svgElement));
+    })
+    .on('mouseout', function() {
+        parcoords.unhighlight();
+    });
 }
 
 function map_data_for_pcp(in_data, series_name) {
@@ -107,7 +178,6 @@ function format_dimensions(data, fixed_scale = true, use_names = false) {
 
 function update_selection() {
     var current_selection = null;
-    var all_data = null;
     var brushed_count = 0;
     for (const [title, pcp] of Object.entries(pcps)) {
         var items = pcp.brushed();
@@ -128,7 +198,7 @@ function update_selection() {
     }
 
     if (brushed_count > 0) {
-        for (const [title, pcp] of Object.entries(pcps)) {
+        for (var pcp of Object.values(pcps)) {
             pcp.canvas.foreground.classList.add('faded');
             pcp.clear("selected");
             pcp.select_data(pcp.data().filter((item, i) => current_selection.has(item.key + '_' + item.series)));
@@ -136,7 +206,7 @@ function update_selection() {
         }
     }
     else {
-        for (const [title, pcp] of Object.entries(pcps)) {
+        for (var pcp of Object.values(pcps)) {
             pcp.canvas.foreground.classList.remove('faded');
             pcp.clear("selected");
             pcp.select_data(pcp.data().filter((item, i) => !series_off[item.series]));
@@ -144,10 +214,10 @@ function update_selection() {
     }
 }
 
-function preview_selection(label) {
+function highlight_selection(items) {
     var current_selection = null;
-    for (const [title, pcp] of Object.entries(pcps)) {
-        var items = pcp.brushed();
+    if (items) {
+        items = items.filter(item => item && !series_off[item.series]);
         if (items) {
             var selected = new Set(items.map(function (d) { return d.key + '_' + d.series; }));
             if (current_selection != null) {
@@ -158,16 +228,19 @@ function preview_selection(label) {
             }
         }
     }
+
     if (current_selection != null && current_selection.size) {
-        for (const [title, pcp] of Object.entries(pcps)) {
+        for (var pcp of Object.values(pcps)) {
             pcp.clear("highlight");
-            pcp.highlight(pcp.data().filter((item, i) => current_selection.has(item.key + '_' + item.series) && item.series == label));
+            var selectedData = pcp.selected().length ? pcp.selected() : pcp.data();
+            var selected = new Set(selectedData.map(function (d) { return d.key + '_' + d.series; }));
+            var pcp_highlighted = new Set(intersect(current_selection, selected));
+            pcp.highlight(pcp.data().filter((item, i) => pcp_highlighted.has(item.key + '_' + item.series)));
         }
     }
     else {
-        for (const [title, pcp] of Object.entries(pcps)) {
-            pcp.clear("highlight");
-            pcp.highlight(pcp.data().filter((item, i) => item.series == label));
+        for (var pcp of Object.values(pcps)) {
+            pcp.unhighlight();
         }
     }
 }
@@ -214,24 +287,6 @@ function create_parcoord(box, title, data, config) {
 
     var container_id = 'pcp_' + title.replace(/ /g, '_');
     box.append('h2').html(title);
-    // box.append('button').html(title)
-    //     .attr('class', 'collapsible');
-    // var content = box.append('div').attr('class', 'content');
-
-    // var coll = document.getElementsByClassName("collapsible");
-    // var i;
-
-    // for (i = 0; i < coll.length; i++) {
-    //     coll[i].addEventListener("click", function () {
-    //         this.classList.toggle("active");
-    //         var content = this.nextElementSibling;
-    //         if (content.style.display === "block") {
-    //             content.style.display = "none";
-    //         } else {
-    //             content.style.display = "block";
-    //         }
-    //     });
-    // }
 
     box.append("label")
         .text('Selection Mode:')
@@ -257,6 +312,9 @@ function create_parcoord(box, title, data, config) {
         .rotateLabels(use_names)
         .on("brush", update_selection)
         .on("render", update_selection);
+
+    //add hover event
+    addHighlightSettings(parcoords, container_id, data);
 
     brush_select.selectAll('option')
         .data(parcoords.brushModes())
