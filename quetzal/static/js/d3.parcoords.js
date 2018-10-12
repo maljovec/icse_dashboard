@@ -1,6 +1,7 @@
 d3.parcoords = function (config) {
     var __ = {
         data: [],
+        selected: [],
         highlighted: [],
         dimensions: {},
         dimensionTitleRotation: 0,
@@ -48,7 +49,7 @@ d3.parcoords = function (config) {
         __.height = selection[0][0].clientHeight;
 
         // canvas data layers
-        ["marks", "foreground", "brushed", "highlight"].forEach(function (layer) {
+        ["marks", "foreground", "brushed", "selected", "highlight"].forEach(function (layer) {
             canvas[layer] = selection
                 .append("canvas")
                 .attr("class", layer)[0][0];
@@ -68,7 +69,7 @@ d3.parcoords = function (config) {
 
         return pc;
     };
-    var events = d3.dispatch.apply(this, ["render", "resize", "highlight", "brush", "brushend", "brushstart", "axesreorder"].concat(d3.keys(__))),
+    var events = d3.dispatch.apply(this, ["render", "resize", "highlight", "select", "brush", "brushend", "brushstart", "axesreorder"].concat(d3.keys(__))),
         w = function () { return __.width - __.margin.right - __.margin.left; },
         h = function () { return __.height - __.margin.top - __.margin.bottom; },
         flags = {
@@ -284,10 +285,19 @@ d3.parcoords = function (config) {
         ctx.foreground.globalAlpha = __.alpha;
         ctx.foreground.scale(devicePixelRatio, devicePixelRatio);
         ctx.brushed.strokeStyle = __.brushedColor;
-        ctx.brushed.lineWidth = 1.4;
+        // Effectively, turn off this in terms of visibility, we have
+        // our own method for dealing with selected data
+        ctx.brushed.lineWidth = 0;
         ctx.brushed.globalCompositeOperation = __.composite;
         ctx.brushed.globalAlpha = __.alpha;
         ctx.brushed.scale(devicePixelRatio, devicePixelRatio);
+
+        ctx.selected.strokeStyle = __.color;
+        ctx.selected.lineWidth = 1.4;
+        ctx.selected.globalCompositeOperation = __.composite;
+        ctx.selected.globalAlpha = __.alpha;
+        ctx.selected.scale(devicePixelRatio, devicePixelRatio);
+
         ctx.highlight.lineWidth = 3;
         ctx.highlight.scale(devicePixelRatio, devicePixelRatio);
 
@@ -726,6 +736,11 @@ d3.parcoords = function (config) {
     function path_highlight(d, i) {
         ctx.highlight.strokeStyle = d3.functor(__.color)(d, i);
         return color_path(d, ctx.highlight);
+    };
+
+    function path_selected(d, i) {
+        ctx.selected.strokeStyle = d3.functor(__.color)(d, i);
+        return color_path(d, ctx.selected);
     };
 
     pc.clear = function (layer) {
@@ -2438,6 +2453,20 @@ d3.parcoords = function (config) {
         d3.selectAll([canvas.foreground, canvas.brushed]).classed("faded", true);
         data.forEach(path_highlight);
         events.highlight.call(this, data);
+        return this;
+    };
+
+    // Brush an array of data
+    pc.select_data = function (data) {
+        if (arguments.length === 0) {
+            return __.selected;
+        }
+
+        __.selected = data;
+        pc.clear("selected");
+        d3.selectAll([canvas.foreground, canvas.brushed]).classed("faded", true);
+        data.forEach(path_selected);
+        events.select.call(this, data);
         return this;
     };
 
