@@ -796,6 +796,10 @@ d3.parcoords = function (config) {
         return __.dimensions[d].title ? __.dimensions[d].title : d;  // dimension display names
     }
 
+    pc.is_brushed = function() {
+        return isBrushed();
+    }
+
     pc.createAxes = function () {
         if (g) pc.removeAxes();
 
