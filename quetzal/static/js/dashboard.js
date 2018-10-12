@@ -4,9 +4,13 @@ d3.queue()
     .await(make_graphs);
 
 var pcps = {};
+var series_off = {};
+var legend_labels = {};
+var legend_glyphs = {};
 
 const intersect = (set1, set2) => [...set1].filter(num => set2.has(num))
 
+// For being able to drag an element around on the page
 function dragElement(elmnt) {
     var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
     if (document.getElementById(elmnt.id + "_header")) {
@@ -107,29 +111,42 @@ function update_selection() {
     for (const [title, pcp] of Object.entries(pcps)) {
         var items = pcp.brushed();
         if (items) {
-            var selected = new Set(items.map(function (d) { return d.key + '_' + d.series; }));
-            var data = new Set(pcp.data().map(function (d) { return d.key + '_' + d.series; }));
-            if (current_selection != null) {
-                current_selection = new Set(intersect(current_selection, selected));
-                all_data = new Set(intersect(all_data, data));
-            }
-            else {
-                current_selection = selected;
-                all_data = data;
+            items = items.filter(item => !series_off[item.series]);
+            if (items) {
+
+                var selected = new Set(items.map(function (d) { return d.key + '_' + d.series; }));
+                var data = new Set(pcp.data().map(function (d) { return d.key + '_' + d.series; }));
+
+                if (all_data != null) {
+                    all_data = new Set(intersect(all_data, data));
+                }
+                else {
+                    all_data = data;
+                }
+
+                if (current_selection != null) {
+                    current_selection = new Set(intersect(current_selection, selected));
+                }
+                else {
+                    current_selection = selected;
+                }
             }
         }
     }
 
     if (current_selection != null && current_selection.size && current_selection.size < all_data.size) {
         for (const [title, pcp] of Object.entries(pcps)) {
-            pcp.clear("highlight");
-            pcp.highlight(pcp.data().filter((item, i) => current_selection.has(item.key + '_' + item.series)));
+            pcp.canvas.foreground.classList.add('faded');
+            pcp.clear("selected");
+            pcp.select_data(pcp.data().filter((item, i) => current_selection.has(item.key + '_' + item.series)));
+
         }
     }
     else {
         for (const [title, pcp] of Object.entries(pcps)) {
-            pcp.clear("highlight");
             pcp.canvas.foreground.classList.remove('faded');
+            pcp.clear("selected");
+            pcp.select_data(pcp.data().filter((item, i) => !series_off[item.series]));
         }
     }
 }
@@ -160,6 +177,26 @@ function preview_selection(label) {
             pcp.highlight(pcp.data().filter((item, i) => item.series == label));
         }
     }
+}
+
+function toggle_series(key) {
+    if (key in series_off) {
+        series_off[key] = !series_off[key];
+    }
+    else {
+        series_off[key] = false;
+    }
+
+    if (series_off[key]) {
+        legend_labels[key].style("opacity", 0.5);
+        legend_glyphs[key].style("opacity", 0.5);
+    }
+    else {
+        legend_labels[key].style("opacity", 1.0);
+        legend_glyphs[key].style("opacity", 1.0);
+    }
+
+    update_selection();
 }
 
 function create_parcoord(box, title, data, config) {
@@ -303,25 +340,23 @@ function make_legend(input_data, config) {
         else {
             color = colors['default'];
         }
-        graphic.append("text")
+        legend_labels[key] = graphic.append("text")
             .attr("x", 5)
             .attr("y", y_pos)
             .text(key)
-            .on("mouseover", function () {
-                preview_selection(key);
-            })
-            .on("mouseout", update_selection);
-        graphic.append("line")
+            .on("click", function () {
+                toggle_series(key);
+            });
+        legend_glyphs[key] = graphic.append("line")
             .attr("x1", 100)
             .attr("y1", y_pos - (line_height) / 4.)
             .attr("x2", 180)
             .attr("y2", y_pos - (line_height) / 4.)
             .attr("stroke-width", 2)
             .attr("stroke", color)
-            .on("mouseover", function () {
-                preview_selection(key);
-            })
-            .on("mouseout", update_selection);
+            .on("click", function () {
+                toggle_series(key);
+            });
         y_pos += line_height;
     }
 
@@ -332,6 +367,12 @@ function make_graphs(error, input_data, config) {
     if (error != null) {
         console.log(error);
         return;
+    }
+
+    for (var data_object of Object.values(input_data)) {
+        for (var series of Object.keys(data_object)) {
+            series_off[series] = false;
+        }
     }
 
     // The legend should be based on the actual data series' not the
