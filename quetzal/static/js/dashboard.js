@@ -108,22 +108,15 @@ function format_dimensions(data, fixed_scale = true, use_names = false) {
 function update_selection() {
     var current_selection = null;
     var all_data = null;
+    var brushed_count = 0;
     for (const [title, pcp] of Object.entries(pcps)) {
         var items = pcp.brushed();
+        brushed_count += pcp.is_brushed();
+
         if (items) {
             items = items.filter(item => !series_off[item.series]);
             if (items) {
-
                 var selected = new Set(items.map(function (d) { return d.key + '_' + d.series; }));
-                var data = new Set(pcp.data().map(function (d) { return d.key + '_' + d.series; }));
-
-                if (all_data != null) {
-                    all_data = new Set(intersect(all_data, data));
-                }
-                else {
-                    all_data = data;
-                }
-
                 if (current_selection != null) {
                     current_selection = new Set(intersect(current_selection, selected));
                 }
@@ -134,7 +127,7 @@ function update_selection() {
         }
     }
 
-    if (current_selection != null && current_selection.size && current_selection.size < all_data.size) {
+    if (brushed_count > 0) {
         for (const [title, pcp] of Object.entries(pcps)) {
             pcp.canvas.foreground.classList.add('faded');
             pcp.clear("selected");
