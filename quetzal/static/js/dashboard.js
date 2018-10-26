@@ -539,13 +539,19 @@ function make_graphs(error, input_data, config) {
         .attr('class', 'spacer')
         .attr('style', 'height: 100px;');
 
+    var plots = d3.select('body').append('div')
+        .attr('id', 'plot_collection');
+
     for (const [title, data_object] of Object.entries(input_data)) {
         var data = [];
         for (const [series, values] of Object.entries(data_object)) {
             data = data.concat(map_data_for_pcp(values, series));
         }
 
-        var box = d3.select('body').append('div').attr('class', 'box');
+        var box = plots.append('div').attr('class', 'box');
         pcps[title] = create_parcoord(box, title, data, config);
     }
+
+    var list = document.getElementById("plot_collection");
+    Sortable.create(list);
 };
