@@ -69,7 +69,7 @@ function addHighlightSettings(parcoords, container_id, data) {
             var brushedData = parcoords.selected().length ? parcoords.selected() : data;
             var currentData = [];
             var currentIntersectionPoints = [];
-            intersectionPoints.forEach(function(d, i) {
+            intersectionPoints.forEach(function (d, i) {
                 if (isMouseOnLine(d[leftAxisNumber], d[rightAxisNumber], mouseCoordinates)) {
                     currentData.push(brushedData[i]);
                     currentIntersectionPoints.push(intersectionPoints[i]);
@@ -104,23 +104,23 @@ function addHighlightSettings(parcoords, container_id, data) {
     }
     function computeCentroids(data) {
         var margins = parcoords.margin();
-        return parcoords.compute_real_centroids(data).map(function(d) { return [d[0] + margins.left, d[1] + margins.top]; });
+        return parcoords.compute_real_centroids(data).map(function (d) { return [d[0] + margins.left, d[1] + margins.top]; });
     }
     function updateIntersectionPoints() {
         var brushedData = parcoords.selected().length ? parcoords.selected() : data;
-        intersectionPoints = brushedData.map(function(d) { return computeCentroids(d) });
+        intersectionPoints = brushedData.map(function (d) { return computeCentroids(d) });
     }
 
-    parcoords.on('select', function() { updateIntersectionPoints(); });
+    parcoords.on('select', function () { updateIntersectionPoints(); });
     updateIntersectionPoints();
     var svg = d3.select('#' + container_id + ' svg');
     var svgElement = svg[0][0];
-    svg.on('mousemove', function() {
+    svg.on('mousemove', function () {
         highlightLines(d3.mouse(svgElement));
     })
-    .on('mouseout', function() {
-        parcoords.unhighlight();
-    });
+        .on('mouseout', function () {
+            parcoords.unhighlight();
+        });
 }
 
 function map_data_for_pcp(in_data, series_name) {
@@ -245,6 +245,35 @@ function highlight_selection(items) {
     }
 }
 
+function clear_all() {
+    for (var pcp of Object.values(pcps)) {
+        pcp.brushReset();
+    }
+}
+
+function align_filter(series) {
+    for (var pcp of Object.values(pcps)) {
+        pcp.brushReset();
+
+    }
+    for (var pcp of Object.values(pcps)) {
+        var extents = {};
+        pcp.brushReset();
+        pcp['brush_select'].property('value', '1D-axes');
+        for (var item of Object.values(pcp.data())) {
+            if (item['series'] == series) {
+                for (var dim of Object.keys(item)) {
+                    if (dim == 'series' || dim == 'key') {
+                        continue;
+                    }
+                    extents[dim] = [Math.min(...item[dim]), Math.max(...item[dim])];
+                }
+            }
+        }
+        pcp.brushExtents(extents);
+    }
+}
+
 function toggle_series(key) {
     if (key in series_off) {
         series_off[key] = !series_off[key];
@@ -350,6 +379,8 @@ function create_parcoord(box, title, data, config) {
             .remove();
     }
 
+    parcoords['brush_select'] = brush_select;
+
     return parcoords;
 }
 
@@ -414,11 +445,57 @@ function make_legend(input_data, config) {
     dragElement(document.getElementById("legend"));
 }
 
+function make_buttons(input_data, config) {
+
+    var series_with_bounds = new Set();
+    for (var data_object of Object.values(input_data)) {
+        for (var series of Object.keys(data_object)) {
+            if (series_with_bounds.has(series)) {
+                continue;
+            }
+            for (var params of Object.values(data_object[series])) {
+                for (var values of Object.values(params)) {
+                    if (Array.isArray(values)) {
+                        series_with_bounds.add(series);
+                        continue;
+                    }
+                }
+                if (series_with_bounds.has(series)) {
+                    continue;
+                }
+            }
+        }
+    }
+
+    var colors = 'colors' in config ? config['colors'] : {};
+    for (let series of series_with_bounds) {
+        var color;
+        if (series in colors) {
+            color = colors[series];
+        }
+        else {
+            color = colors['default'];
+        }
+        d3.select('#button_bar').append('button')
+            .html('<i class="fas fa-filter icon" style="color: ' + color + ';"></i> Align Filter to ' + series)
+            .attr('id', 'button_align')
+            .attr('class', 'button')
+            .on('click', function () { align_filter(series); });
+    }
+
+    d3.select('#button_bar').append('button')
+        .html('<i class="fas fa-eraser"></i> Clear All Selections')
+        .attr('id', 'button_clear')
+        .attr('class', 'button')
+        .on('click', clear_all);
+}
+
 function make_graphs(error, input_data, config) {
     if (error != null) {
         console.log(error);
         return;
     }
+    make_buttons(input_data, config);
 
     for (var data_object of Object.values(input_data)) {
         for (var series of Object.keys(data_object)) {
