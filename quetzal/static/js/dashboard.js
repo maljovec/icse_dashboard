@@ -294,6 +294,17 @@ function toggle_series(key) {
     update_selection();
 }
 
+function toggle_view(button, collapsible) {
+    if (collapsible.style('display') == 'none') {
+        button.html('<i class="fas fa-chevron-up"></i>');
+        collapsible.style('display', 'block');
+    }
+    else {
+        button.html('<i class="fas fa-chevron-down"></i>');
+        collapsible.style('display', 'none');
+    }
+}
+
 function create_parcoord(box, title, data, config) {
     var dimensions;
     var scales = 'scales' in config ? scales = config['scales'] : {};
@@ -315,14 +326,24 @@ function create_parcoord(box, title, data, config) {
     }
 
     var container_id = 'pcp_' + title.replace(/ /g, '_');
-    box.append('h2').html(title);
+    var header = box.append('h2');
+    var button = header.append('button')
+        .attr('class', 'button button_collapse')
+        .html('<i class="fas fa-chevron-up"></i>');
+    header.append('div').html(title);
+    var collapsible_section = box.append('div')
+        .attr('class', 'collapsible');
 
-    box.append("label")
+    button.on("click", function () {
+        toggle_view(button, collapsible_section)
+    });
+
+    collapsible_section.append("label")
         .text('Selection Mode:')
         .style("width", "100px")
         .style("display", "inline-block");
-    var brush_select = box.append('select');
-    var container = box.append('div')
+    var brush_select = collapsible_section.append('select');
+    var container = collapsible_section.append('div')
         .attr('id', container_id)
         .attr('class', 'parcoords')
         .style("z-index", 1)
