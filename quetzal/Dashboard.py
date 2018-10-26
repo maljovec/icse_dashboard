@@ -17,7 +17,7 @@ class Dashboard(object):
         self.configuration = configuration
         self.data = data
         self.host = kwargs.get("host", "127.0.0.1")
-        self.port = kwargs.get("port", "5000")
+        self.port = kwargs.get("port", 5000)
 
     def add_axes(self, axes_name, data=None):
         if data is None:
@@ -52,5 +52,5 @@ class Dashboard(object):
         def get_data():
             return json.dumps(self.data)
 
-        webbrowser.open("http://" + self.host + ":" + self.port)
+        webbrowser.open("http://" + self.host + ":" + str(self.port))
         app.run(host=self.host, port=self.port, debug=False)

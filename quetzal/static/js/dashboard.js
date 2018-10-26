@@ -495,6 +495,13 @@ function make_graphs(error, input_data, config) {
         console.log(error);
         return;
     }
+
+    console.log(config);
+    if ('title' in config) {
+        console.log(config['title']);
+        document.title = config['title'];
+    }
+
     make_buttons(input_data, config);
 
     for (var data_object of Object.values(input_data)) {

@@ -13,6 +13,7 @@ configuration = {
             },
     "scales":  {"Dimension Set 2": "shared"},
     "labels": {"Dimension Set 1": "none"},
+    "title": "Simple Example"
 }
 
 data = {
@@ -75,5 +76,5 @@ data = {
     },
 }
 
-dashboard = Dashboard(data, configuration)
+dashboard = Dashboard(data, configuration, port=5001)
 dashboard.run()

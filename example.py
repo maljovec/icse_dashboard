@@ -104,4 +104,6 @@ tick_labels = {
 }
 dashboard.config('tick_labels', tick_labels)
 
+dashboard.config('title', "ICSE Test Data")
+
 dashboard.run()
