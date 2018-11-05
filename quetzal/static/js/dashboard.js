@@ -119,7 +119,8 @@ function addHighlightSettings(parcoords, container_id, data) {
         highlightLines(d3.mouse(svgElement));
     })
         .on('mouseout', function () {
-            parcoords.unhighlight();
+            // parcoords.unhighlight();
+            highlight_selection(null);
         });
 }
 
