@@ -255,6 +255,8 @@ function toggle_info_box() {
     var collapsible = d3.select('#info_box');
     if (collapsible.style('display') == 'none') {
         collapsible.style('display', 'block');
+        // collapsible.style('top', '20px');
+        // collapsible.style('left', '30px');
     }
     else {
         collapsible.style('display', 'none');
@@ -521,7 +523,7 @@ function make_buttons(input_data, config) {
     }
 
     d3.select('#button_bar').append('button')
-        .html('<i class="fas fa-eraser"></i> Clear All Selections')
+        .html('<i class="fas fa-eraser"></i> Clear All Filters')
         .attr('id', 'button_clear')
         .attr('class', 'button')
         .on('click', clear_all);
@@ -533,22 +535,36 @@ function make_buttons(input_data, config) {
         .html('Controls')
         .attr('id', 'info_box_header')
         .style('text-align', 'center')
+        // .style('cursor', 'move')
         .style('margin', '0px');
+
+    //Reconfiguration
+    info_box.append('h3')
+        .html('UI Reconfiguration:');
     var tip_list = info_box.append('ul');
     var tips = [];
+    tips.push('Individual plots can be hidden/expanded by clicking on the chevron button in the upper left corner.');
     tips.push('Double click on an axes title to invert the scale for that dimension.');
     tips.push('Click and drag on an axes title to rearrange the dimension order.');
     tips.push('Click and drag the black left edge of an axis box to rearrange axes vertically.');
-    tips.push('Toggle a series on or off by clicking on its glyph or label in the legend.');
     tips.push('The legend can be moved by clicking and dragging on the word "Legend."');
-    tips.push('Hover over an individual or group of lines to see them temporarily emphasized across all plots.');
-    tips.push('Individual plots can be hidden/expanded by clicking on the chevron button in the upper left corner.');
-    tips.push('There are three different selection modes for filtering data points by performing an AND operation across all filtered dimensions.');
-    tips.push('<em>1D-axes</em>: Brush a contiguous block of values on a specified dimension.');
-    tips.push('<em>2D-strums</em>: Between two axes draw a line like strumming the strings of a guitar, all lines intersecting the strum will be retained.');
-    tips.push('<em>angular</em>: Between two axes draw three points that sweep out an angle, all lines whose slope lies in the angle will be retained.');
 
-    for(let tip of tips) {
+    for (let tip of tips) {
+        tip_list.append('li').html(tip);
+    }
+
+    //Filtering
+    info_box.append('h3')
+        .html('Data Filtration:');
+    tip_list = info_box.append('ul');
+    tips = [];
+    tips.push('Toggle a series on or off by clicking on its glyph or label in the legend.');
+    tips.push('Hover over an individual or group of lines to see them temporarily emphasized across all plots.');
+    tips.push('There are three different selection modes for filtering data points by performing an AND operation across all filtered dimensions:<ul><li><em>1D-axes</em>: Brush a contiguous block of values on a specified dimension.</li><li><em>2D-strums</em>: Between two axes draw a line like strumming the strings of a guitar, all lines intersecting the strum will be retained.</li><li><em>angular</em>: Between two axes draw three points that sweep out an angle, all lines whose slope lies in the angle will be retained.</li></ul>');
+    tips.push('If there is any series that contains spanning information, you can directly align the filtering to match these spans by using the appropriate "Align Filter to ..." button at the top of the UI.');
+    tips.push('You can always clear all filters by clicking the red "Clear All Filters" button at the top of the UI.');
+
+    for (let tip of tips) {
         tip_list.append('li').html(tip);
     }
 
