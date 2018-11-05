@@ -18,7 +18,7 @@ h2 div {
     border-top: 1px solid black;
     border-bottom: 1px solid black;
     border-right: 1px solid black;
-    border-left: 10px solid black;
+    border-left: 1px solid black;
     margin: 10px;
     padding: 5px 10px 5px 5px;
     border-radius: 5px;
@@ -27,26 +27,31 @@ h2 div {
     box-shadow: 5px 5px 10px 0px rgba(0,0,0,0.5);
 }
 
-#legend {
-    opacity: 1;
-    background-color: #FFFFFF;
-    width: 200px;
-    position: fixed;
-    border: 1px solid black;
-    border-radius: 5px;
-    top: 20px;
-    right: 30px;
-    margin: 0px;
-    padding: 10px;
-    z-index: 2;
-    -webkit-box-shadow: 5px 5px 10px 0px rgba(0,0,0,0.5);
-    -moz-box-shadow: 5px 5px 10px 0px rgba(0,0,0,0.5);
-    box-shadow: 5px 5px 10px 0px rgba(0,0,0,0.5);
+.reorderable {
+    border-left: 10px solid black;
 }
 
 #button_bar {
     position: fixed;
     z-index: 2;
+}
+
+#legend {
+    opacity: 1;
+    width: 200px;
+    position: fixed;
+    top: 20px;
+    right: 30px;
+    margin: 0px;
+    padding: 10px;
+    z-index: 2;
+}
+
+#info_box {
+    z-index: 3;
+    display: none;
+    background-color: DodgerBlue;
+    color: White;
 }
 
 .button {
@@ -77,6 +82,12 @@ h2 div {
 
 .button_collapse {
     padding: 10px;
+}
+
+#button_info {
+    background-color: DodgerBlue;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 .icon {

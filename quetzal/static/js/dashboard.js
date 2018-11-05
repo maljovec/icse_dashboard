@@ -251,6 +251,16 @@ function clear_all() {
     }
 }
 
+function toggle_info_box() {
+    var collapsible = d3.select('#info_box');
+    if (collapsible.style('display') == 'none') {
+        collapsible.style('display', 'block');
+    }
+    else {
+        collapsible.style('display', 'none');
+    }
+}
+
 function align_filter(series) {
     for (var pcp of Object.values(pcps)) {
         pcp.brushReset();
@@ -420,7 +430,8 @@ function make_legend(input_data, config) {
 
     // Generate the legend
     var legend_div = d3.select('body').append('div')
-        .attr('id', 'legend');
+        .attr('id', 'legend')
+        .attr('class', 'box');
 
     legend_div.append('h2').html('Legend')
         .style('text-align', 'center')
@@ -467,6 +478,11 @@ function make_legend(input_data, config) {
 }
 
 function make_buttons(input_data, config) {
+    d3.select('#button_bar').append('button')
+        .html('<i class="fas fa-info"></i>')
+        .attr('id', 'button_info')
+        .attr('class', 'button')
+        .on('click', toggle_info_box);
 
     var series_with_bounds = new Set();
     for (var data_object of Object.values(input_data)) {
@@ -509,6 +525,35 @@ function make_buttons(input_data, config) {
         .attr('id', 'button_clear')
         .attr('class', 'button')
         .on('click', clear_all);
+
+    var info_box = d3.select('#button_bar').append('div')
+        .attr('id', 'info_box')
+        .attr('class', 'collapsible box');
+    info_box.append('h2')
+        .html('Controls')
+        .attr('id', 'info_box_header')
+        .style('text-align', 'center')
+        .style('margin', '0px');
+    var tip_list = info_box.append('ul');
+    var tips = [];
+    tips.push('Double click on an axes title to invert the scale for that dimension.');
+    tips.push('Click and drag on an axes title to rearrange the dimension order.');
+    tips.push('Click and drag the black left edge of an axis box to rearrange axes vertically.');
+    tips.push('Toggle a series on or off by clicking on its glyph or label in the legend.');
+    tips.push('The legend can be moved by clicking and dragging on the word "Legend."');
+    tips.push('Hover over an individual or group of lines to see them temporarily emphasized across all plots.');
+    tips.push('Individual plots can be hidden/expanded by clicking on the chevron button in the upper left corner.');
+    tips.push('There are three different selection modes for filtering data points by performing an AND operation across all filtered dimensions.');
+    tips.push('<em>1D-axes</em>: Brush a contiguous block of values on a specified dimension.');
+    tips.push('<em>2D-strums</em>: Between two axes draw a line like strumming the strings of a guitar, all lines intersecting the strum will be retained.');
+    tips.push('<em>angular</em>: Between two axes draw three points that sweep out an angle, all lines whose slope lies in the angle will be retained.');
+
+    for(let tip of tips) {
+        tip_list.append('li').html(tip);
+    }
+
+    // Not working right now.
+    // dragElement(document.getElementById("info_box"));
 }
 
 function make_graphs(error, input_data, config) {
@@ -517,9 +562,7 @@ function make_graphs(error, input_data, config) {
         return;
     }
 
-    console.log(config);
     if ('title' in config) {
-        console.log(config['title']);
         document.title = config['title'];
     }
 
@@ -548,7 +591,7 @@ function make_graphs(error, input_data, config) {
             data = data.concat(map_data_for_pcp(values, series));
         }
 
-        var box = plots.append('div').attr('class', 'box');
+        var box = plots.append('div').attr('class', 'box reorderable');
         pcps[title] = create_parcoord(box, title, data, config);
     }
 
