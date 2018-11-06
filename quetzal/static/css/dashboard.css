@@ -49,14 +49,14 @@ h2 div {
 
 #info_box {
     z-index: 3;
-    /* position: fixed; */
+    position: relative;
     display: none;
     background-color: DodgerBlue;
     opacity: 0.9;
     color: White;
     /* top: 20px;
     left: 30px; */
-    max-height: 400px;
+    max-height: 70vh;
     overflow-y: auto;
 }
 
