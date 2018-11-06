@@ -145,12 +145,23 @@ function format_dimensions(data, fixed_scale = true, use_names = false) {
                 if (key == 'series' || key == 'key') {
                     continue;
                 }
-
-                if (min_value == null || value < min_value) {
-                    min_value = value;
+                if (Array.isArray(value)) {
+                    for (let v of value) {
+                        if (min_value == null || v < min_value) {
+                            min_value = v;
+                        }
+                        if (max_value == null || v > max_value) {
+                            max_value = v;
+                        }
+                    }
                 }
-                if (max_value == null || value > max_value) {
-                    max_value = value;
+                else {
+                    if (min_value == null || value < min_value) {
+                        min_value = value;
+                    }
+                    if (max_value == null || value > max_value) {
+                        max_value = value;
+                    }
                 }
             }
         }
@@ -597,7 +608,7 @@ function make_graphs(error, input_data, config) {
 
     d3.select('body').append('div')
         .attr('class', 'spacer')
-        .attr('style', 'height: 100px;');
+        .attr('style', 'height: 55px;');
 
     var plots = d3.select('body').append('div')
         .attr('id', 'plot_collection');
