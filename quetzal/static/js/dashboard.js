@@ -318,7 +318,7 @@ function toggle_view(button, collapsible) {
     }
 }
 
-function create_parcoord(box, title, data, config) {
+function add_parcoord(box, title, data, config) {
     var dimensions;
     var scales = 'scales' in config ? scales = config['scales'] : {};
     var dimension_labels = 'dimension_labels' in config ? config['dimension_labels'] : {};
@@ -609,7 +609,7 @@ function make_graphs(error, input_data, config) {
         }
 
         var box = plots.append('div').attr('class', 'box reorderable');
-        pcps[title] = create_parcoord(box, title, data, config);
+        pcps[title] = add_parcoord(box, title, data, config);
     }
 
     var list = document.getElementById("plot_collection");

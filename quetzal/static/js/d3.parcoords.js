@@ -2454,7 +2454,7 @@ d3.parcoords = function (config) {
 
         __.highlighted = data;
         pc.clear("highlight");
-        d3.selectAll([canvas.foreground, canvas.brushed]).classed("faded", true);
+        d3.selectAll([canvas.foreground, canvas.brushed, canvas.selected]).classed("unhighlighted", true);
         data.forEach(path_highlight);
         events.highlight.call(this, data);
         return this;
@@ -2478,7 +2478,7 @@ d3.parcoords = function (config) {
     pc.unhighlight = function () {
         __.highlighted = [];
         pc.clear("highlight");
-        d3.selectAll([canvas.foreground, canvas.brushed]).classed("faded", false);
+        d3.selectAll([canvas.foreground, canvas.brushed, canvas.selected]).classed("unhighlighted", false);
         return this;
     };
 
