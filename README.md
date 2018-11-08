@@ -1,4 +1,4 @@
-# icse_dashboard
+# Quetzal
 A small example dashboard for visualizing high-dimensional simulation data
 coming from the ICSE at the University of Utah.
 
