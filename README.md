@@ -6,13 +6,16 @@ coming from the ICSE at the University of Utah.
 
 The following dependencies need to be installed before running:
 
+ * Flask
+
+The following optional dependencies are needed to run the example code:
+
  * scipy
  * numpy
  * pandas
- * dill
- * Flask
  * openpyxl
  * xlrd >= 0.9.0
+ * dill
 
 These can easily all be installed using ```pip```:
 
