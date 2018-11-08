@@ -8,7 +8,7 @@ The following dependencies need to be installed before running:
 
  * Flask
 
-The following optional dependencies are needed to run the example code:
+The following optional dependencies are needed to run the `example.py` code:
 
  * scipy
  * numpy
@@ -36,8 +36,18 @@ python example.py
 
 Then navigate your browser to ```localhost:5000```.
 
+Note, this second example requires additional dependencies which are listed in the Dependencies section above.
+
 # Known Issues
 
 * Explore the use of scatterplot projections and other methods of summarizing the many output dimensions.
 * Continue exposing the formatting to the python side.
 * Generate more data and validate example with experimental data.
+
+# Acknowledgements
+
+This project utilizes or reproduces code from the following projects:
+ * [D3.js](https://d3js.org/)
+ * [d3.parcoords.js](http://syntagmatic.github.io/parallel-coordinates/)
+ * [Font Awesome](https://fontawesome.com/)
+ * [Sortable.js](https://github.com/RubaXa/Sortable)
