@@ -34,8 +34,8 @@ dashboard.add_series("Input parameters", "post. sample", post_x.to_dict("index")
 
 for qoi_type in sim.index.levels[0]:
     dashboard.add_axes(qoi_type)
-    dashboard.add_series(qoi_type, "simulations", sim.loc[qoi_type].to_dict())
     dashboard.add_series(qoi_type, "experiments", expt_range(expt, qoi_type))
+    dashboard.add_series(qoi_type, "simulations", sim.loc[qoi_type].to_dict())
     dashboard.add_series(qoi_type, "surrogates", surr.loc[qoi_type].to_dict())
     dashboard.add_series(qoi_type, "prior sample", prior_y.loc[qoi_type].to_dict())
     dashboard.add_series(qoi_type, "post. sample", post_y.loc[qoi_type].to_dict())

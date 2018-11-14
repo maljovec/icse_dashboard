@@ -401,6 +401,14 @@ d3.parcoords = function (config) {
         if ((parseFloat(v) == v) && (v != null)) {
             return "number";
         }
+        else if (Array.isArray(v)) {
+            if ((parseFloat(v[0]) == v[0]) && (v[0] != null)) {
+                return "number";
+            }
+            else {
+                return pc.toType(v[0]);
+            }
+        }
         return pc.toType(v);
     };
 
