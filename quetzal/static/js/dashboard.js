@@ -355,18 +355,26 @@ function add_parcoord(box, title, data, config) {
         .attr('class', 'button button_collapse')
         .html('<i class="fas fa-chevron-up"></i>');
     header.append('div').html(title);
+
     var collapsible_section = box.append('div')
-        .attr('class', 'collapsible');
+        .attr('class', 'collapsible')
+        .style('margin-top', '-25px');
+
+    var select_mode = collapsible_section.append('div')
+        .style('text-align', 'right')
+        .style('position', 'relative')
+        .style('right', '0px');
+    select_mode.append("label")
+        .text('Selection Mode:')
+        .style('font-weight', 'normal')
+        .style('font-size', '12pt')
+        .style('padding-right', '10px');
+    var brush_select = select_mode.append('select');
 
     button.on("click", function () {
         toggle_view(button, collapsible_section)
     });
 
-    collapsible_section.append("label")
-        .text('Selection Mode:')
-        .style("width", "100px")
-        .style("display", "inline-block");
-    var brush_select = collapsible_section.append('select');
     var container = collapsible_section.append('div')
         .attr('id', container_id)
         .attr('class', 'parcoords')
@@ -447,14 +455,18 @@ function make_legend(input_data, config) {
         .attr('id', 'legend')
         .attr('class', 'box');
 
-    legend_div.append('h2').html('Legend')
+    legend_div.append('h2').html('<i class="fas fa-grip-horizontal"></i>')
         .style('text-align', 'center')
         .style('margin', '0px')
         .style('cursor', 'move')
+        .style('font', '12pt')
+        .style('background', '#cccccc')
         .attr('id', 'legend_header');
 
     var graphic = legend_div.append('svg')
-        .attr('width', '200px')
+        .style('padding', '10px')
+        .style('padding-top', '0px')
+        .attr('width', '180px')
         .attr('height', String(legend_height) + 'px')
         .append('g');
 
