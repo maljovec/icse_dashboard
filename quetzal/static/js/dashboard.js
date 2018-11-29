@@ -7,6 +7,7 @@ var pcps = {};
 var series_off = {};
 var legend_labels = {};
 var legend_glyphs = {};
+var hover_is_on = false;
 
 const intersect = (set1, set2) => [...set1].filter(num => set2.has(num))
 
@@ -56,10 +57,12 @@ function dragElement(elmnt) {
 function addHighlightSettings(parcoords, container_id, data) {
     var intersectionPoints;
     function highlightLines(mouseCoordinates) {
-        var highlightedLines = getLinesForHighlight(mouseCoordinates);
-        if (highlightedLines && highlightedLines[0].length) {
-            var currentData = highlightedLines[0];
-            highlight_selection(currentData);
+        if (hover_is_on) {
+            var highlightedLines = getLinesForHighlight(mouseCoordinates);
+            if (highlightedLines && highlightedLines[0].length) {
+                var currentData = highlightedLines[0];
+                highlight_selection(currentData);
+            }
         }
     }
     function getLinesForHighlight(mouseCoordinates) {
@@ -261,6 +264,12 @@ function clear_all() {
     for (var pcp of Object.values(pcps)) {
         pcp.brushReset();
     }
+}
+
+function toggle_hover() {
+    hover_is_on = !hover_is_on;
+    d3.select('#button_hover')
+        .classed('button_on', hover_is_on);
 }
 
 function toggle_info_box() {
@@ -552,6 +561,12 @@ function make_buttons(input_data, config) {
         .attr('class', 'button')
         .on('click', clear_all);
 
+    d3.select('#button_bar').append('button')
+        .html('<span class="fa-stack"><i class="fa fa-chart-area fa-stack-2x"></i><i class="fa fa-mouse-pointer fa-stack-1x" style="color:DodgerBlue"></i></span>')
+        .attr('id', 'button_hover')
+        .attr('class', 'button')
+        .on('click', toggle_hover);
+
     var info_box = d3.select('#button_bar').append('div')
         .attr('id', 'info_box')
         .attr('class', 'collapsible box');
@@ -637,4 +652,5 @@ function make_graphs(error, input_data, config) {
 
     var list = document.getElementById("plot_collection");
     Sortable.create(list);
+    toggle_hover();
 };
