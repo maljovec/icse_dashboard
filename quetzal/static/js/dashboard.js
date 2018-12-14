@@ -498,7 +498,7 @@ function make_legend(input_data, config) {
             .attr('id', 'legend_label_' + safe_name)
             .attr("x", 5)
             .attr("y", y_pos)
-            .text(key)
+            .text(key.length > 20 ? key.substring(0, 17)+"..." : key)
             .on("click", function () {
                 toggle_series(key);
             });
@@ -535,8 +535,9 @@ function update_legend() {
     // TODO: This is fragile, this does not currently:
     // - Compute the legend's width or available space (hard-coded at 230)
     // - Determine if the end_point is after the start_point
-    //   (we should truncate the first label if possible to ensure a
-    //    minimum size of 20px or so for the line)
+    //   (we should somehow ensure a minimum size for the line)
+    // - Potentially use human-readable numbers for large counts (K, M)
+    // - Auto-widen the legend to fit
     var max_label_width = 0;
     var max_count_width = 0;
     for (let key of Object.keys(legend_glyphs)) {
