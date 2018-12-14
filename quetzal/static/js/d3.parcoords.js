@@ -94,6 +94,10 @@ d3.parcoords = function (config) {
             .append("svg:g")
             .attr("transform", "translate(" + __.margin.left + "," + __.margin.top + ")");
 
+        pc.tooltip = d3.select("body").append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
         return pc;
     };
     var events = d3.dispatch.apply(this, ["render", "resize", "highlight", "select", "brush", "brushend", "brushstart", "axesreorder"].concat(d3.keys(__))),
@@ -734,13 +738,13 @@ d3.parcoords = function (config) {
         d3.entries(__.dimensions).forEach(function (p, i) {  //p isn't really p
             var datum = d[p.key];
             if (Array.isArray(datum)) {
-                for(var i = 0; i < datum.length; i++) {
+                for (var i = 0; i < datum.length; i++) {
                     ctx.moveTo(position(p.key) - __.dimensions[p.key].innerTickSize, typeof datum[i] == 'undefined' ? getNullPosition() : __.dimensions[p.key].yscale(datum[i]));
                     ctx.lineTo(position(p.key) + __.dimensions[p.key].innerTickSize, typeof datum[i] == 'undefined' ? getNullPosition() : __.dimensions[p.key].yscale(datum[i]));
 
-                    if ( i+1 < datum.length) {
+                    if (i + 1 < datum.length) {
                         ctx.moveTo(position(p.key), typeof datum[i] == 'undefined' ? getNullPosition() : __.dimensions[p.key].yscale(datum[i]));
-                        ctx.lineTo(position(p.key), typeof datum[i+1] == 'undefined' ? getNullPosition() : __.dimensions[p.key].yscale(datum[i+1]));
+                        ctx.lineTo(position(p.key), typeof datum[i + 1] == 'undefined' ? getNullPosition() : __.dimensions[p.key].yscale(datum[i + 1]));
                     }
                 }
             }
@@ -827,11 +831,26 @@ d3.parcoords = function (config) {
         d3.event.preventDefault();
     }
 
+    function axisTooltipOn(d) {
+        pc.tooltip.transition()
+            .duration(200)
+            .style("opacity", .9);
+        pc.tooltip.html(d)
+            .style("left", (d3.event.pageX) + "px")
+            .style("top", (d3.event.pageY - 28) + "px");
+    }
+
+    function axisTooltipOff(d) {
+        pc.tooltip.transition()
+            .duration(500)
+            .style("opacity", 0);
+    }
+
     function dimensionLabels(d) {
         return __.dimensions[d].title ? __.dimensions[d].title : d;  // dimension display names
     }
 
-    pc.is_brushed = function() {
+    pc.is_brushed = function () {
         return isBrushed();
     }
 
@@ -875,6 +894,8 @@ d3.parcoords = function (config) {
                 "class": "label"
             })
             .text(dimensionLabels)
+            .on("mouseover", axisTooltipOn)
+            .on("mouseout", axisTooltipOff)
             .on("dblclick", flipAxisAndUpdatePCP)
             .on("wheel", rotateLabels);
 
@@ -1246,7 +1267,7 @@ d3.parcoords = function (config) {
                         return extents[dimension][0] <= __.dimensions[p].yscale(d[p]) && __.dimensions[p].yscale(d[p]) <= extents[dimension][1]
                     }
                     else if (Array.isArray(d[p])) {
-                        return extents[dimension][0] <= d[p][d[p].length-1] && d[p][0] <= extents[dimension][1]
+                        return extents[dimension][0] <= d[p][d[p].length - 1] && d[p][0] <= extents[dimension][1]
                     }
                     else {
 
