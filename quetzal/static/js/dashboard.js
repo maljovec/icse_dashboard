@@ -7,6 +7,7 @@ var pcps = {};
 var series_off = {};
 var legend_labels = {};
 var legend_glyphs = {};
+var legend_counts = {};
 var hover_is_on = false;
 
 const intersect = (set1, set2) => [...set1].filter(num => set2.has(num))
@@ -227,6 +228,7 @@ function update_selection() {
             pcp.select_data(pcp.data().filter((item, i) => !series_off[item.series]));
         }
     }
+    update_legend();
 }
 
 function highlight_selection(items) {
@@ -318,10 +320,12 @@ function toggle_series(key) {
     if (series_off[key]) {
         legend_labels[key].style("opacity", 0.5);
         legend_glyphs[key].style("opacity", 0.5);
+        legend_counts[key].style("opacity", 0.5);
     }
     else {
         legend_labels[key].style("opacity", 1.0);
         legend_glyphs[key].style("opacity", 1.0);
+        legend_counts[key].style("opacity", 1.0);
     }
 
     update_selection();
@@ -475,7 +479,7 @@ function make_legend(input_data, config) {
     var graphic = legend_div.append('svg')
         .style('padding', '10px')
         .style('padding-top', '0px')
-        .attr('width', '180px')
+        .attr('width', '230px')
         .attr('height', String(legend_height) + 'px')
         .append('g');
 
@@ -483,6 +487,7 @@ function make_legend(input_data, config) {
 
     for (let key of series_set) {
         var color;
+        var safe_name = key.replace(new RegExp(" ", 'g'), "_");
         if (key in colors) {
             color = colors[key];
         }
@@ -490,6 +495,7 @@ function make_legend(input_data, config) {
             color = colors['default'];
         }
         legend_labels[key] = graphic.append("text")
+            .attr('id', 'legend_label_' + safe_name)
             .attr("x", 5)
             .attr("y", y_pos)
             .text(key)
@@ -497,19 +503,82 @@ function make_legend(input_data, config) {
                 toggle_series(key);
             });
         legend_glyphs[key] = graphic.append("line")
-            .attr("x1", 100)
+            .attr('id', 'legend_line_' + safe_name)
+            .attr("x1", 110)
             .attr("y1", y_pos - (line_height) / 4.)
-            .attr("x2", 180)
+            .attr("x2", 140)
             .attr("y2", y_pos - (line_height) / 4.)
             .attr("stroke-width", 2)
             .attr("stroke", color)
             .on("click", function () {
                 toggle_series(key);
             });
+        legend_counts[key] = graphic.append("text")
+            .attr('id', 'legend_count_' + safe_name)
+            .attr("x", 230)
+            .attr("text-anchor", "end")
+            .attr("y", y_pos)
+            .text("")
+            .attr("fill", color)
+            .on("click", function () {
+                toggle_series(key);
+            });
+
         y_pos += line_height;
     }
 
+    update_legend();
     dragElement(document.getElementById("legend"));
+}
+
+function update_legend() {
+    // TODO: This is fragile, this does not currently:
+    // - Compute the legend's width or available space (hard-coded at 230)
+    // - Determine if the end_point is after the start_point
+    //   (we should truncate the first label if possible to ensure a
+    //    minimum size of 20px or so for the line)
+    var max_label_width = 0;
+    var max_count_width = 0;
+    for (let key of Object.keys(legend_glyphs)) {
+
+
+        var brushed_count = 0;
+        var selected_points = new Set();
+        var total_points = new Set();
+        for (var pcp of Object.values(pcps)) {
+            brushed_count += pcp.is_brushed();
+            for (var item of pcp.selected()) {
+                if (item["series"] == key) {
+                    selected_points.add(item["key"]);
+                }
+            }
+            for (var item of pcp.data()) {
+                if (item["series"] == key) {
+                    total_points.add(item["key"]);
+                }
+            }
+        }
+        var total = total_points.size;
+        var selected = brushed_count > 0 ? selected_points.size : total;
+        legend_counts[key].text(selected + "/" + total);
+
+
+        var width = document.getElementById(legend_labels[key].attr('id')).getBBox().width;
+        if (max_label_width < width) {
+            max_label_width = width;
+        }
+        width = document.getElementById(legend_counts[key].attr('id')).getBBox().width;
+        if (max_count_width < width) {
+            max_count_width = width;
+        }
+    }
+    var start_point = max_label_width + 10;
+    var end_point = 230 - max_count_width - 10;
+    for (let key of Object.keys(legend_glyphs)) {
+        legend_glyphs[key]
+            .attr("x1", start_point)
+            .attr("x2", end_point);
+    }
 }
 
 function make_buttons(input_data, config) {
@@ -653,4 +722,5 @@ function make_graphs(error, input_data, config) {
     var list = document.getElementById("plot_collection");
     Sortable.create(list);
     toggle_hover();
+    update_legend();
 };
